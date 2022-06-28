@@ -28,6 +28,10 @@ set incsearch
 set hlsearch
 set clipboard=unnamedplus
 
+" wrap text for text files
+autocmd Filetype tex set wrap linebreak 
+autocmd Filetype text set wrap linebreak 
+
 call plug#begin('~/.vim/plugged')
 
 Plug 'morhetz/gruvbox'
@@ -49,8 +53,12 @@ Plug 'sirver/ultisnips'
 "Latex integration
 Plug 'lervag/vimtex'
 
-Plug 'nvim-telescope/telescope.nvim'
 Plug 'mbbill/undotree'
+
+"Fuzzy finder telescope
+Plug 'nvim-lua/plenary.nvim'
+Plug 'nvim-telescope/telescope.nvim'
+Plug 'nvim-treesitter/nvim-treesitter'
 
 call plug#end()
 lua require'lspconfig'.pyright.setup{capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())}
@@ -103,13 +111,12 @@ function! ToggleNetrw()
 endfunction
 
 " Find files using Telescope command-line sugar.
-nnoremap <leader>ff <cmd>Telescope find_files<cr>
-nnoremap <leader>fg <cmd>Telescope live_grep<cr>
-nnoremap <leader>fb <cmd>Telescope buffers<cr>
-nnoremap <leader>fh <cmd>Telescope help_tags<cr>
+nnoremap <leader>ff <cmd>lua require('telescope.builtin').find_files()<cr>
+nnoremap <leader>fg <cmd>lua require('telescope.builtin').live_grep()<cr>
 
-"makes zathura the pdf viewer for vimtex
-let g:vimtex_view_method = 'zathura'
+"makes okular the pdf viewer for vimtex
+let g:vimtex_view_general_viewer = 'okular'
+let g:vimtex_view_general_options = '--unique file:@pdf\#src:@line@tex'
 
 lua <<EOF
   -- Setup nvim-cmp.
@@ -134,6 +141,8 @@ lua <<EOF
       ['<C-Space>'] = cmp.mapping.complete(),
       ['<C-e>'] = cmp.mapping.close(),
       ['<CR>'] = cmp.mapping.confirm({ select = true }),
+      ['<C-j>'] = cmp.mapping.select_next_item(),
+      ['<C-k>'] = cmp.mapping.select_prev_item(),
     },
     sources = {
       { name = 'nvim_lsp' },
@@ -150,4 +159,23 @@ lua <<EOF
       { name = 'buffer' },
     }
   })
+EOF
+
+lua << EOF
+require('telescope').setup{
+  defaults = {
+    -- ...
+  },
+  pickers = {
+    find_files = {
+      theme = "dropdown",
+    },
+    live_grep = {
+      theme = "dropdown",
+    }
+  },
+  extensions = {
+    -- ...
+  }
+}
 EOF
